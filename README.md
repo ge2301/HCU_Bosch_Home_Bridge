@@ -1,15 +1,24 @@
 # hcu-bosch-bridge
 
 HCU-Plugin: **Bosch Smart Home Bridge** – bindet Geraete des Bosch Smart Home Controllers (SHC)
-lokals als native Gerate in das Homematic IP System (HCU) ein.
+lokal als native Geraete in das Homematic IP System (HCU) ein.
+
+> **Hinweis:** Dieses Projekt ist ein Community-Projekt und **kein offizielles
+> Produkt von Bosch oder eQ-3**; es besteht keinerlei Verbindung, Sponsoring
+> oder endorsement durch diese Firmen. „Bosch Smart Home" ist eine Marke von
+> Bosch, „Homematic IP" und „HCU" sind Marken der eQ-3 Entwicklung GmbH – sie
+> werden hier nur zur Beschreibung der kompatiblen Systeme verwendet
+> (Details in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)).
+> Die Nutzung erfolgt auf eigene Gefahr; siehe auch
+> [Haftung und Sicherheit](#haftung-und-sicherheit).
 
 Grundlage: Homematic IP **Connect API 1.0.1** (WebSocket) und die offizielle
 **Bosch SHC Local API** (mTLS-REST, Long-Polling). Details im
-[PLAN-hcu-bosch-plugin.md](../PLAN-hcu-bosch-plugin.md).
+[PLAN-hcu-bosch-plugin.md](docs/PLAN-hcu-bosch-plugin.md).
 
 ## Status
 
-**Meilensteine M0–M3 abgeschlossen** (Tests: 14 Unit + 17 Mock-HCU + 17 Mock-SHC + 20 E2E, alle gruen):
+**Meilensteine M0–M4 abgeschlossen** (Unit-, Protokoll-, E2E- und Mock-Tests, alle gruen):
 
 - [x] Connect-API-Client (READY, Discover/Status/Control/Config-Flows, Reconnect)
 - [x] HMIP-Systemstate-Cache mit Twin-Erkennung (PLUGIN_EXTERNAL)
@@ -41,6 +50,8 @@ Grundlage: Homematic IP **Connect API 1.0.1** (WebSocket) und die offizielle
       HCU-Zuordnung mit Aktivieren/Parken, Einstellungen (Funktionsschalter,
       Bewegungs-Impulsdauer, WebUI-PIN), Live-Protokoll; SSE-gesteuerte Aktualisierung;
       Deep-Link-Fallback im Express-Server
+- [x] **WebUI Anleitung + Feinschliff**: fuehrender Hilfe-Tab, Mobile-Layout,
+      Status-Pillen, Demo-Stack (`npm run demo`)
 - [ ] M5/M6: Feldtest an echter HCU, Edge-Cases (Bewegungsimpuls-AutoOff, WRC2,
       reale Szenen-/Alarm-Endpunkte, powerMeterState-Key-Matching)
 
@@ -143,8 +154,24 @@ scripts/
   smoke-mock-shc.js E2E-Test Pairing/Inventar/Control/Events gegen Mock-SHC
 ```
 
+## Haftung und Sicherheit
+
+- Dieses Plugin ist **kein zertifiziertes Sicherheitsprodukt** und ersetzt
+  keine fachgerechte Installation oder Prüfung sicherheitsrelevanter
+  Einrichtungen (Alarm, Rauch-, Wasser-, Fenstersensorik, Heizung).
+- Bridge, Bosch- und HCU-Kommunikation laufen **ausschliesslich im lokalen
+  Netz**; es findet keine Kommunikation mit Cloud-Diensten und keine
+  Fernwartung statt. Geraetenamen und Statusdaten verlassen Ihr Netzwerk nicht.
+- Die WebUI (Port 8341) ist im LAN ohne Zugangsschutz erreichbar; die optionale
+  WebUI-PIN ist eine Zugriffshuerde, keine Verschluesselung. Machen Sie den
+  Port nicht im Internet offen.
+- Der gesamte Code ist offen einsehbar (GPL-3.0). Sicherheitslücken melden Sie
+  bitte per GitHub-Issue oder privat an den Maintainer.
+
 ## Lizenz
 
-Apache-2.0 (Code). Connect-API-Doku (c) eQ-3 AG; Bosch-API-Doku (c) Robert
+GNU GPL-3.0 (siehe [LICENSE](LICENSE)); Details zu Abhaengigkeiten, Fonts und
+Marken in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+Connect-API-Doku (c) eQ-3 AG; Bosch-API-Doku (c) Robert
 Bosch Smart Home GmbH (CC BY-NC-ND) – jeweils nur Referenz, nicht Teil dieses
 Pakets.

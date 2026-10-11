@@ -95,6 +95,12 @@ export default function App() {
         {tab === 'logs' && <Logs />}
         {tab === 'guide' && <Anleitung />}
       </main>
+      <footer className="imprint">
+        Community-Projekt ohne Verbindung zu Bosch oder eQ-3.{' '}
+        <span className="msi">info</span>{' '}
+        Bosch Smart Home und Homematic IP sind Marken ihrer jeweiligen Inhaber.{' '}
+        Lizenz: GPL-3.0, Nutzung auf eigene Gefahr.
+      </footer>
     </>
   );
 }
