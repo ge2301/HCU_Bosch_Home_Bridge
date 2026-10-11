@@ -1,177 +1,178 @@
-# hcu-bosch-bridge
+# Bosch Smart Home Bridge für Homematic IP
 
-HCU-Plugin: **Bosch Smart Home Bridge** – bindet Geraete des Bosch Smart Home Controllers (SHC)
-lokal als native Geraete in das Homematic IP System (HCU) ein.
+Dieses Plugin verbindet eine **Bosch Smart Home Zentrale (SHC)** mit einer
+**Homematic IP Home Control Unit (HCU)**. Bosch-Geräte erscheinen dadurch in
+der HCU wie normale Homematic-Geräte: sie sind in der HCU-Inbox sichtbar,
+lassen sich Räumen zuordnen, in Programme einbinden und über die gewohnten
+Homematic-Bedienelemente schalten.
 
-> **Hinweis:** Dieses Projekt ist ein Community-Projekt und **kein offizielles
-> Produkt von Bosch oder eQ-3**; es besteht keinerlei Verbindung, Sponsoring
-> oder endorsement durch diese Firmen. „Bosch Smart Home" ist eine Marke von
-> Bosch, „Homematic IP" und „HCU" sind Marken der eQ-3 Entwicklung GmbH – sie
-> werden hier nur zur Beschreibung der kompatiblen Systeme verwendet
+> **Wichtiger Hinweis:** Dies ist ein privates Community-Projekt. Es steht in
+> keiner Verbindung zu Bosch oder zur eQ-3 Entwicklung GmbH und wird von keiner
+> der beiden Firmen unterstützt oder geprüft. „Bosch Smart Home“ ist eine Marke
+> von Bosch, „Homematic IP“ und „HCU“ sind Marken der eQ-3 Entwicklung GmbH;
+> sie werden hier nur verwendet, um die kompatiblen Systeme zu benennen
 > (Details in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)).
-> Die Nutzung erfolgt auf eigene Gefahr; siehe auch
-> [Haftung und Sicherheit](#haftung-und-sicherheit).
+> Die Verwendung erfolgt auf eigene Gefahr – siehe
+> [Sicherheit und Haftung](#Sicherheit-und-Haftung).
 
-Grundlage: Homematic IP **Connect API 1.0.1** (WebSocket) und die offizielle
-**Bosch SHC Local API** (mTLS-REST, Long-Polling). Details im
-[PLAN-hcu-bosch-plugin.md](docs/PLAN-hcu-bosch-plugin.md).
+## Was die Bridge kann
 
-## Status
+| Bereich | Funktion |
+|---|---|
+| Geräteübernahme | Fenster- und Türkontakte, Steckdosen und Zwischenstecker, Beleuchtung und Dimmer, Heizkörperthermostate, Rollladen und Jalousien, Rauchmelder, Wassermelder, Bewegungsmelder, Taster |
+| Messwerte | Energieverbrauch, Helligkeit und Luftgüte als zusätzliche Homematic-Kanäle, wo das Bosch-Gerät sie liefert |
+| Bedienung | Schalten, Dimmen, Sollwert setzen, Rollladenfahren direkt aus Homematic-Oberflächen |
+| Automatik | Bosch-Ereignisse lösen Homematic-Programme aus; Homematic-Programme schalten Bosch-Geräte |
+| Szenen | Bosch-Szenen erscheinen als schaltbare Homematic-Kanäle |
+| Alarm | Scharf-/Unscharfschalten der Bosch-Alarmanlage über Homematic |
+| Verwaltung | eigenes Web-Interface für Kopplung, Gerätezuordnung, Einstellungen und Protokoll |
 
-**Meilensteine M0–M4 abgeschlossen** (Unit-, Protokoll-, E2E- und Mock-Tests, alle gruen):
+Nicht unterstützt werden Geräte, die nicht über die lokale Bosch-API
+angesprochen werden können, insbesondere Bosch-Home-Connect-Geräte
+(Waschmaschine, Geschirrspüler und ähnliche Hausgeräte).
 
-- [x] Connect-API-Client (READY, Discover/Status/Control/Config-Flows, Reconnect)
-- [x] HMIP-Systemstate-Cache mit Twin-Erkennung (PLUGIN_EXTERNAL)
-- [x] Geraete-Registry mit Idempotenz-Marker und unreach-Parking
-- [x] HCUweb-Konfigseite: WEBLINK zur WebUI, Status, READONLY-Zuordnungsliste
-- [x] WebUI-Geruest (Express, Status-API, Logs, SSE) auf Port 8341
-- [x] Dockerfile (arm64) + Build-Skript + Dev-Token-Skript
-- [x] **Bosch SHC-Client** (`server/bosch/shc-client.js`): mTLS-REST, Inventar,
-      Service-States, Long-Poll-Events (RE/subscribe + RE/longPoll) mit Auto-Restart
-- [x] **Pairing** (`server/bosch/pairing.js`): selbstsigniertes Client-Zertifikat,
-      `POST :8443/smarthome/clients`, `oss_`-Pflicht durchgesetzt, Unpair per DELETE
-- [x] **BoschManager** (`server/bosch/index.js`): Verbinden -> Inventar -> States ->
-      Events; Retry (60 s); WebUI-Endpunkte `/api/bosch/status|devices|pair|unpair|refresh|control`
-- [x] **Mock-SHC** (`scripts/mock-shc.js`): echter HTTPS-Stack mit mTLS, Pairing,
-      10 Geraeten (Heizkoerper, Steckdose, Fensterkontakt, Rollladen, Twinguard,
-      Alarmsirene, Zwischenstecker, Bewegungs- und Wassermelder), Locations-Baum,
-      Long-Poll-Events, `--tick` fuer simulierte Aktivitaet
-- [x] **M2 Mapping-Katalog** (`server/mapping/`): deklarative Typzuordnung
-      (Kontakt, Schalter, Dimmer/Licht, Thermostat, Rollladen+Lamellen, Rauch,
-      Wasser, Bewegung, Taster/SWITCH_INPUT mit Fallback), Bonus-Zweitgeraete
-      (Energie/Helligkeit/Luftguete) per Schalter, **Szenen** und **Alarmanlage**
-      als virtuelle HCU-Schalter; 14 Unit-Tests (`npm test`)
-- [x] **M3 Pipeline**: Bosch-Ereignisse -> STATUS_EVENT an die HCU;
-      CONTROL_REQUEST -> Bosch-PUT (inkl. Szenen-Trigger und Alarm scharf/unscharf);
-      neue Bosch-Geraete loesen automatische Neu-Discovery aus (idempotent,
-      nur das neue Geraet wird nachgereicht)
-- [x] **M4 React-WebUI** (`webui-src/`, Vite-Build nach `server/webui/public`):
-      Dashboard (HCU-/Bosch-Status, Pairing-Wizard), Bosch-Geräte inkl. Direktschalten,
-      HCU-Zuordnung mit Aktivieren/Parken, Einstellungen (Funktionsschalter,
-      Bewegungs-Impulsdauer, WebUI-PIN), Live-Protokoll; SSE-gesteuerte Aktualisierung;
-      Deep-Link-Fallback im Express-Server
-- [x] **WebUI Anleitung + Feinschliff**: fuehrender Hilfe-Tab, Mobile-Layout,
-      Status-Pillen, Demo-Stack (`npm run demo`)
-- [ ] M5/M6: Feldtest an echter HCU, Edge-Cases (Bewegungsimpuls-AutoOff, WRC2,
-      reale Szenen-/Alarm-Endpunkte, powerMeterState-Key-Matching)
+## Voraussetzungen
 
-### Smoke-Tests
+- Homematic IP Home Control Unit (HCU3) mit aktueller Firmware und
+  aktivierter Möglichkeit zum Laden von Plugin-Images
+- Bosch Smart Home Zentrale (SHC) im selben Netzwerk wie die HCU
+- Bosch Companion App auf einem Smartphone (für die Pairing-PIN)
+- Ein Windows- oder Linux-Rechner mit Docker, wenn Sie das Plugin-Image selbst
+  bauen möchten; andernfalls genügt das fertige `tar.gz`-Paket
 
-```
-npm test                              # Mapping-Katalog Unit-Tests
-node scripts/smoke-mock-hcu.js        # HCU-Protokollstrecke (Mock-HCU-WebSocket)
-node scripts/smoke-mock-shc.js        # Bosch-Strecke: Pairing, Inventar, Control, Events
-node scripts/smoke-e2e.js             # Kompletter Durchstich HCU <-> Plugin <-> Bosch
-node scripts/mock-shc.js --tick       # Mock-SHC manuell starten (PIN 12345678901234567890)
-```
+Alle Komponenten müssen sich im selben lokalen Netzwerk befinden. Eine
+Internetverbindung ist für den Betrieb nicht erforderlich.
 
-Tests der WebUI-API (Server muss laufen): `/api/status|devices|settings|pin|logs`
-werden über `scripts/smoke-e2e.js` bzw. manuell gegen `http://localhost:8341` geprüft.
+## Installation
 
-## Entwicklung (Remote-Modus gegen echte HCU)
+1. Plugin-Image `bosch-hcu-bridge-<version>.tar.gz` von der
+   [Releases-Seite](https://github.com/ge2301/HCU_Bosch_Home_Bridge/releases)
+   herunterladen (alternativ selbst bauen, siehe
+   [Entwickler-Dokumentation](docs/ENTWICKLUNG.md)).
+2. HCUweb öffnen, unter **Einstellungen → Plugins** das Image hochladen und
+   installieren.
+3. Das Plugin startet automatisch und verbindet sich mit der HCU. Die HCU stellt
+   dabei Zugangsnachweis und Gerätedaten bereit; Sie müssen keine Token oder
+   Schlüssel eintragen.
+4. Die Plugin-Konfigurationsseite in der HCUweb zeigt den Status an und enthält
+   den Link zum eigenen Web-Interface (Standard: `http://<HCU-IP>:8341`).
 
-1. HCUweb: Entwicklermodus aktivieren, Connect-API-WebSocket freigeben.
-2. Aktivierungscode erzeugen, dann:
-   `.\scripts\get-dev-token.ps1 -HcuHost hcu1-XXXX.local -ActivationKey ABCDEF`
-3. `npm install`
-4. `node server/index.js de.essers.gerrit.plugin.boschbridge hcu1-XXXX.local ./data/dev-authtoken.txt`
-5. HCUweb -> Plugins: Plugin erscheint, READY. Konfiguration-Dialog zeigt
-   WebUI-Link (http://<hcu-ip>:8341) und Status.
+## Bosch-Kopplung (Pairing)
 
-Ohne HCU laeuft der Server ebenfalls (WebUI erreichbar, WebSocket versucht
-Reconnect alle 3 s): `npm start`.
+Nach der Installation koppeln Sie einmalig Ihre Bosch-Zentrale:
 
-### WebUI entwickeln (Hot-Reload)
+1. Web-Interface der Bridge öffnen (Link auf der Plugin-Konfigurationsseite).
+2. Reiter **Einstellungen** bzw. **Dashboard** wählen und die Bosch-Kopplung
+   starten.
+3. IP-Adresse oder Namen Ihrer Bosch-Zentrale eintragen.
+4. Pairing-PIN aus der Bosch Companion App eintragen:
+   **Profil → Systemsteuerung → Systemdaten → Pairing-PIN**.
+5. Innerhalb von zwei Minuten die Pairing-Taste an Ihrer Bosch-Zentrale drücken
+   und im Web-Interface bestätigen.
 
-```
-npm install --prefix webui-src         # einmalig
-npm run webui:dev                      # Vite-Dev-Server :5173, Proxy /api -> :8341
-npm run webui:build                    # Produktions-Build nach server/webui/public
-```
+Die für die Verbindung notwendigen Zugangsdaten werden ausschliesslich lokal
+im Datenspeicher des Plugins abgelegt und lassen sich über „Entkoppeln“ vollständig
+entfernen.
 
-### Entwicklung gegen den Mock-SHC (ohne Bosch-Hardware)
+## Geräte in der HCU
 
-```
-node scripts/mock-shc.js --tick                # optional, simuliert Aktivitaet
-$env:BOSCH_PAIR_PORT='18443'; $env:BOSCH_API_PORT='18444'; $env:BOSCH_INFO_PORT='18446'
-node server/index.js                           # dann im WebUI auf http://localhost:8341 pairen
-```
+Neu erkannte Bosch-Geräte meldet die Bridge der HCU. Sie erscheinen daraufhin
+in der **HCU-Inbox** und werden wie folgt eingebunden:
 
-Pairing-PIN des Mocks: `12345678901234567890`, Host `127.0.0.1`.
+1. HCUweb öffnen und die Inbox aufrufen (Gerätesuche starten, falls die
+   angebotenen Geräte nicht sofort sichtbar sind).
+2. Geräte auswählen, Raum und Namen festlegen, Übernahme bestätigen.
+3. Nach einer kurzen Neuverbindung erscheinen die Geräte im normalen
+   Gerätebestand und können in Programmen verwendet werden.
 
-## Build & Installation auf der HCU
+Das Web-Interface der Bridge zeigt unter **HCU-Zuordnung** für jedes Gerät den
+aktuellen Zustand: **eingebunden**, **in Inbox/angeboten** oder **geparkt**.
+Über „Deaktivieren“ können Sie einzelne Geräte ruhigschalten, ohne sie zu
+löschen; „Aktivieren“ nimmt sie wieder in Betrieb. Neue Bosch-Geräte werden
+automatisch nachgemeldet, sobald die HCU sich erneut mit dem Plugin verbindet.
 
-Voraussetzung: Docker Desktop (Linux/arm64-Unterstuetzung).
+Ausführliche Erklärungen, typische Abläufe und Problemlösungen finden Sie im
+Reiter **Anleitung** des Web-Interfaces.
 
-```
-.\scripts\build-plugin.ps1            # erzeugt dist\bosch-hcu-bridge-<version>.tar.gz
-```
+## Konfiguration
 
-HCUweb -> **Plugins** -> Datei hochladen. Nach der Installation stellt die HCU
-automatisch `/TOKEN`, `/CLIENTID`, `/SGTIN` und `/data` bereit; das Plugin
-verbindet sich selbsttaetig (weder Pairing noch manuelle Tokens noetig).
+Im Reiter **Einstellungen** des Web-Interfaces legen Sie fest:
 
-## Bosch-Pairing
+- welche optionalen Zusatzkanäle (Messwerte, Taster-Verhalten) erzeugt werden,
+- wie lange Bewegungsmelder-Impulse wirken,
+- ob das Web-Interface eine PIN zum Unscharfschalten verlangt.
 
-Bosch verlangt ein TLS-Client-Zertifikat und einen Tastendruck am Controller:
+Alle Änderungen werden sofort gespeichert und, wo nötig, an die HCU übermittelt.
 
-1. WebUI oeffnen (Link auf der HCUweb-Pluginseite) -> Bosch-Pairing.
-2. IP/Hostname des SHC + Pairing-PIN (aus der Bosch Companion App:
-   Einstellungen -> Systemsteuerung -> Systemdaten -> Pairing-PIN) eingeben.
-3. Pairingstaste am Controller druecken (leuchtet), dann "Pairen".
-4. Zertifikat + Key liegen unter `/data/bosch/`, die Client-Id lautet
-   `oss_hcu-bosch-bridge` (Bosch-ToS: Client-Id muss mit `oss_` beginnen).
+## Datenspeicherung
 
-**Rechtlicher Hinweis:** Die Bosch Local API ist laut Nutzungsbedingungen nur fuer
-private, nicht-kommerzielle Nutzung zugaendlich; die Verteilung dieses Plugins
-erfolgt entsprechend kostenlos als Open Source.
+Das Plugin speichert seine Einstellungen, die Kopplungsdaten zur Bosch-Zentrale
+und ein Laufzeitprotokoll ausschliesslich im lokalen Speicher des Plugins auf
+Ihrer HCU. Es werden keine Daten an externe Dienste übertragen. Das
+Web-Interface ist ausschliesslich in Ihrem lokalen Netzwerk erreichbar.
 
-## Projektstruktur
-
-```
-server/
-  index.js          Bootstrap (Args: pluginId hcuHost tokenFile)
-  hcu-client.js     Connect-API-WebSocket-Client (Envelope, RPC, Provider)
-  hmip-cache.js     Systemstate-Cache + HMIP_EVENT-Merge + Twin-Lookup
-  registry.js       Plugin-Geraete: Discover-Idempotenz, Inclusion, STATUS_EVENT
-  config-page.js    CONFIG_TEMPLATE (WEBLINK/READONLY/BOOLEAN) + Update
-  config-store.js   /data-Persistenz (config/offered/state, atomar)
-  applog.js         Log-Ring fuer WebUI
-  bosch/
-    index.js        BoschManager: Lifecycle, Inventar, States, Events, Pairing
-    shc-client.js   mTLS-REST + Long-Poll-Events (Port-Overrides fuer Tests)
-    pairing.js      Client-Zertifikat + POST/DELETE :8443/smarthome/clients
-  webui/            Express-Server (REST /api/*, SSE /api/events, Static)
-    public/         Build-Ausgabe des SPA (generiert, im Image enthalten)
-webui-src/          React+Vite-Quellcode der WebUI
-  src/              App, Dashboard, BoschDevices, Mapping, Settings, Logs
-  vite.config.js    outDir = ../server/webui/public, Dev-Proxy /api -> :8341
-scripts/
-  build-plugin.ps1  Image-Build + dist/*.tar.gz
-  get-dev-token.ps1 Dev-Auth-Token (Remote-Modus)
-  mock-shc.js       Mock Bosch SHC (mTLS, 10 Geraete, Szenen, Events)
-  smoke-mock-hcu.js Protokolltest gegen Mock-HCU
-  smoke-mock-shc.js E2E-Test Pairing/Inventar/Control/Events gegen Mock-SHC
-```
-
-## Haftung und Sicherheit
+## Sicherheit und Haftung
 
 - Dieses Plugin ist **kein zertifiziertes Sicherheitsprodukt** und ersetzt
-  keine fachgerechte Installation oder Prüfung sicherheitsrelevanter
-  Einrichtungen (Alarm, Rauch-, Wasser-, Fenstersensorik, Heizung).
-- Bridge, Bosch- und HCU-Kommunikation laufen **ausschliesslich im lokalen
-  Netz**; es findet keine Kommunikation mit Cloud-Diensten und keine
-  Fernwartung statt. Geraetenamen und Statusdaten verlassen Ihr Netzwerk nicht.
-- Die WebUI (Port 8341) ist im LAN ohne Zugangsschutz erreichbar; die optionale
-  WebUI-PIN ist eine Zugriffshuerde, keine Verschluesselung. Machen Sie den
-  Port nicht im Internet offen.
-- Der gesamte Code ist offen einsehbar (GPL-3.0). Sicherheitslücken melden Sie
-  bitte per GitHub-Issue oder privat an den Maintainer.
+  keine fachgerechte Planung oder Prüfung sicherheitsrelevanter Einrichtungen
+  (Einbruchmeldeanlage, Rauchmelder, Wassermelder, Heizung).
+- Verlassen Sie sich bei sicherheitskritischen Funktionen nicht auf die
+  Bridge. Prüfen Sie nach jeder Änderung, ob Alarme und Programme wie
+  vorgesehen auslösen.
+- Das Web-Interface (Port 8341) ist im lokalen Netzwerk ohne zusätzliche
+  Verschlüsselung erreichbar. Die optionale PIN ist eine Zugriffssicherung,
+  keine Verschlüsselung. Geben Sie diesen Port **nicht** über das Internet frei.
+- Für Datenverluste, Sachschäden oder Folgeschäden aus der Nutzung wird keine
+  Haftung übernommen. Der Quellcode steht unter GPL-3.0 und ist vollständig
+  nachvollziehbar.
+
+## Deinstallation
+
+1. Im Web-Interface die Bosch-Kopplung über „Entkoppeln“ aufheben.
+2. Eingebundene Geräte in der HCUweb aus dem Gerätebestand entfernen.
+3. Das Plugin in der HCUweb deaktivieren und löschen.
+
+Dabei werden alle Zugangsdaten und Einstellungen des Plugins gelöscht.
+
+## Häufige Fragen
+
+**Die Bosch-Zentrale wird nicht gefunden.**
+Prüfen Sie, ob Zentrale und HCU im selben Netzwerk sind und ob die
+Pairing-PIN noch gültig ist. Die Pairing-Taste muss innerhalb von etwa zwei
+Minuten nach dem Start des Pairings gedrückt werden.
+
+**Geräte sind in der Inbox, aber nicht im Bestand.**
+Die HCU übernimmt angebotene Geräte erst nach einer Neuverbindung. Starten Sie
+die Gerätesuche in der HCUweb oder verbinden Sie das Plugin kurz neu.
+
+**Ein Gerät lässt sich nicht schalten.**
+Kontrollieren Sie im Reiter **HCU-Zuordnung**, ob das Gerät als
+**eingebunden** und nicht als **geparkt** angezeigt wird. Geparkte Geräte sind
+bewusst ruhigestellt und werden über „Aktivieren“ wieder scharf.
+
+**Kann ich Bosch-Weissware (Waschmaschine und ähnliche Geräte) einbinden?**
+Nein. Diese Geräte sprechen über Bosch Home Connect und sind nicht über die
+lokale Zentrale erreichbar.
+
+**Muss die Bridge dauerhaft laufen?**
+Ja. Ohne laufendes Plugin verschwinden die Bosch-Geräte aus der Steuerung; die
+eingebundenen Einträge bleiben als nicht erreichbare Geräte erhalten, bis Sie
+das Plugin wieder starten oder die Geräte entfernen.
+
+## Entwickler
+
+Bauen, Testen und Weiterentwicklung sind in der
+[Entwickler-Dokumentation](docs/ENTWICKLUNG.md) beschrieben, architektonische
+Grundlagen im [PLAN](docs/PLAN-hcu-bosch-plugin.md).
 
 ## Lizenz
 
-GNU GPL-3.0 (siehe [LICENSE](LICENSE)); Details zu Abhaengigkeiten, Fonts und
-Marken in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
-Connect-API-Doku (c) eQ-3 AG; Bosch-API-Doku (c) Robert
-Bosch Smart Home GmbH (CC BY-NC-ND) – jeweils nur Referenz, nicht Teil dieses
-Pakets.
+GNU GPL-3.0 (siehe [LICENSE](LICENSE)). Hinweise zu Abhängigkeiten, Schriften
+und Marken: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+Die Homematic IP Connect API stammt von der eQ-3 Entwicklung GmbH, die Bosch
+Smart Home Local API von der Robert Bosch Smart Home GmbH. Deren
+Beschreibungen wurden nur als Referenz verwendet und sind nicht Bestandteil
+dieses Pakets.
+
+Änderungen sind im [CHANGELOG](CHANGELOG.md) dokumentiert.
