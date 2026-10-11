@@ -34,9 +34,9 @@ LABEL de.eq3.hmip.plugin.metadata=\
   "friendlyName": { "en": "Bosch Smart Home Bridge", "de": "Bosch Smart Home Bridge" },\
   "description": {\
     "en": "Integrates Bosch Smart Home devices into your Homematic IP system via the local SHC API.",\
-    "de": "Bindet Bosch Smart Home Ger\u00e4te \u00fcber die lokale SHC-API in das Homematic IP System ein."\
+    "de": "Bindet Bosch Smart Home Geräte über die lokale SHC-API in das Homematic IP System ein."\
   },\
   "settings": [],\
-  "changelog": "Version 0.1.0\n- Erste oeffentliche Version: Bosch-Geraete als native HCU-Geraete (Sensoren, Schalter, Dimmer, Thermostate, Rollladen)\n- Szenen und Alarmanlage als schaltbare Kanale\n- WebUI mit Dashboard, Geraeten, Zuordnung, Einstellungen, Protokoll und Anleitung\n- Parken statt Loeschen deaktivierter Geraete, automatisches Nachreichen neuer Bosch-Geraete",\
+  "changelog": "Version 0.1.0\n- Erste öffentliche Version: Bosch-Geräte als native HCU-Geräte (Sensoren, Schalter, Dimmer, Thermostate, Rollladen)\n- Szenen und Alarmanlage als schaltbare Kanäle\n- WebUI mit Dashboard, Geräten, Zuordnung, Einstellungen, Protokoll und Anleitung\n- Parken statt Löschen deaktivierter Geräte, automatisches Nachreichen neuer Bosch-Geräte",\
   "logsEnabled": true\
 }'
