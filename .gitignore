@@ -1,0 +1,11 @@
+node_modules/
+data/
+dist/
+*.tar
+*.tar.gz
+*.log
+.env
+
+# lokale Dev-/Auth-Token niemals committen
+server/TOKEN
+data/dev-authtoken.txt

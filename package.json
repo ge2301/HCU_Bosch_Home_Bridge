@@ -1,0 +1,23 @@
+{
+  "name": "hcu-bosch-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HCU-Plugin: Bosch Smart Home Bridge - integriert Bosch-SHC-Geraete in das Homematic IP System",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js de.essers.gerrit.plugin.boschbridge localhost ./data/dev-authtoken.txt",
+    "test": "node --test \"test/*.test.js\"",
+    "webui:build": "npm --prefix webui-src run build",
+    "webui:dev": "npm --prefix webui-src run dev",
+    "demo": "node scripts/demo-ui.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "selfsigned": "^5.5.0",
+    "uuid": "^11.0.5",
+    "ws": "^8.18.0"
+  }
+}
