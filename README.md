@@ -37,7 +37,7 @@ angesprochen werden können, insbesondere Bosch-Home-Connect-Geräte
 
 ## Voraussetzungen
 
-- Homematic IP Home Control Unit (HCU3) mit aktueller Firmware und
+- Homematic IP Home Control Unit (HCU) mit aktueller Firmware und
   aktivierter Möglichkeit zum Laden von Plugin-Images
 - Bosch Smart Home Zentrale (SHC) im selben Netzwerk wie die HCU
 - Bosch Companion App auf einem Smartphone (für die Pairing-PIN)
