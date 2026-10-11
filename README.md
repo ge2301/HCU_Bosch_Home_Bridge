@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/logo-wide.png" alt="Bosch Smart Home Bridge – Homematic IP und Bosch" width="520">
+</p>
+
 # Bosch Smart Home Bridge für Homematic IP
 
 Dieses Plugin verbindet eine **Bosch Smart Home Zentrale (SHC)** mit einer
@@ -176,3 +180,7 @@ Beschreibungen wurden nur als Referenz verwendet und sind nicht Bestandteil
 dieses Pakets.
 
 Änderungen sind im [CHANGELOG](CHANGELOG.md) dokumentiert.
+
+## Oberfläche im Überblick
+
+![WebUI der Bridge: Dashboard, Bosch-Geräte, HCU-Zuordnung und Einstellungen](docs/img/overview.png)
